@@ -207,7 +207,6 @@ export default function Sales() {
     { enabled: posAllowed }
   );
   const createTransactionMutation = trpc.transactions.create.useMutation();
-  const incrementDiscountCodeUsageMutation = trpc.discountCodes.incrementUsage.useMutation();
   const activeDiscountsQuery = trpc.discounts.active.useQuery(undefined, { enabled: posAllowed });
   const validateDiscountCodeQuery = trpc.discountCodes.validate.useQuery(
     { code: discountCode.trim() },
@@ -430,8 +429,7 @@ export default function Sales() {
 
     try {
       const transactionNumber = `TXN-${Date.now()}`;
-      const codeIdUsed = appliedDiscount?.codeId ?? null;
-
+      
       await createTransactionMutation.mutateAsync({
         transactionNumber,
         customerId: selectedCustomer?.id,
@@ -450,11 +448,6 @@ export default function Sales() {
           toppings: item.toppings || [],
         })),
       });
-
-      // นับการใช้รหัสส่วนลด (ใช้ได้ครั้งเดียว / ตาม maxUsageCount)
-      if (codeIdUsed != null) {
-        await incrementDiscountCodeUsageMutation.mutateAsync({ codeId: codeIdUsed });
-      }
 
       const receivedAmount = paymentMethod === "cash" ? parseFloat(tempPaymentAmount) : total;
       const changeAmount = paymentMethod === "cash" ? receivedAmount - total : 0;
