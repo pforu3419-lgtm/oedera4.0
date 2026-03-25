@@ -16,8 +16,7 @@
     "db:push": "node -e \"console.log('MongoDB in use; no migrations to run.')\"",
     "create-admin": "tsx scripts/create-admin.ts",
     "create-admin-code": "tsx scripts/create-admin-code.ts",
-    "fix-duplicate-product-ids": "tsx scripts/fix-duplicate-product-ids.ts",
-    "test-db": "tsx server/scripts/test-db-connection.ts"
+    "fix-duplicate-product-ids": "tsx scripts/fix-duplicate-product-ids.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",

@@ -1842,26 +1842,14 @@ export const appRouter = router({
   }),
 
   receiptTemplates: router({
-    list: adminProcedure.query(async ({ ctx }) => {
-      const orgId = db.getUserOrganizationId(ctx.user);
-      if (!orgId) throw new TRPCError({ code: "BAD_REQUEST", message: "ไม่พบ organization" });
-      return db.getReceiptTemplates(orgId);
-    }),
-
-    get: adminProcedure
+    list: publicProcedure.query(() => db.getReceiptTemplates()),
+    
+    get: publicProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input, ctx }) => {
-        const orgId = db.getUserOrganizationId(ctx.user);
-        if (!orgId) throw new TRPCError({ code: "BAD_REQUEST", message: "ไม่พบ organization" });
-        return db.getReceiptTemplate(input.id, orgId);
-      }),
-
-    getDefault: posProcedure.query(async ({ ctx }) => {
-      const orgId = db.getUserOrganizationId(ctx.user);
-      if (!orgId) return null;
-      return db.getDefaultReceiptTemplate(orgId);
-    }),
-
+      .query(({ input }) => db.getReceiptTemplate(input.id)),
+    
+    getDefault: posProcedure.query(() => db.getDefaultReceiptTemplate()),
+    
     create: adminProcedure
       .input(
         z.object({
@@ -1876,12 +1864,8 @@ export const appRouter = router({
           isDefault: z.boolean().optional(),
         })
       )
-      .mutation(async ({ input, ctx }) => {
-        const orgId = db.getUserOrganizationId(ctx.user);
-        if (!orgId) throw new TRPCError({ code: "BAD_REQUEST", message: "ไม่พบ organization" });
-        return db.createReceiptTemplate(input, orgId);
-      }),
-
+      .mutation(({ input }) => db.createReceiptTemplate(input)),
+    
     update: adminProcedure
       .input(
         z.object({
@@ -1897,21 +1881,14 @@ export const appRouter = router({
           isDefault: z.boolean().optional(),
         })
       )
-      .mutation(async ({ input, ctx }) => {
-        const orgId = db.getUserOrganizationId(ctx.user);
-        if (!orgId) throw new TRPCError({ code: "BAD_REQUEST", message: "ไม่พบ organization" });
+      .mutation(({ input }) => {
         const { id, ...data } = input;
-        return db.updateReceiptTemplate(id, data, orgId);
+        return db.updateReceiptTemplate(id, data);
       }),
-
+    
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input, ctx }) => {
-        const orgId = db.getUserOrganizationId(ctx.user);
-        if (!orgId) throw new TRPCError({ code: "BAD_REQUEST", message: "ไม่พบ organization" });
-        await db.deleteReceiptTemplate(input.id, orgId);
-        return { success: true };
-      }),
+      .mutation(({ input }) => db.deleteReceiptTemplate(input.id)),
   }),
 
   // ============ DISCOUNT CODES ============

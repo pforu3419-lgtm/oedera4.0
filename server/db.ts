@@ -1952,17 +1952,15 @@ export async function updateLoyaltySettings(data: Record<string, unknown>) {
 }
 
 // ============ RECEIPT TEMPLATES ============
-// เทมเพลตใบเสร็จแยกตาม organizationId — แต่ละบัญชี/ร้านเห็นเฉพาะของตัวเอง
-export async function createReceiptTemplate(data: any, organizationId: number) {
+export async function createReceiptTemplate(data: any) {
   const templates = await getCollection<any>("receiptTemplates");
   if (data.isDefault) {
-    await templates.updateMany({ organizationId }, { $set: { isDefault: false } });
+    await templates.updateMany({}, { $set: { isDefault: false } });
   }
   const now = new Date();
   const doc = {
     id: await getNextSeq("receiptTemplates"),
     ...data,
-    organizationId,
     createdAt: now,
     updatedAt: now,
   };
@@ -1970,46 +1968,40 @@ export async function createReceiptTemplate(data: any, organizationId: number) {
   return doc;
 }
 
-export async function updateReceiptTemplate(id: number, data: any, organizationId: number) {
+export async function updateReceiptTemplate(id: number, data: any) {
   const templates = await getCollection<any>("receiptTemplates");
   if (data.isDefault) {
-    await templates.updateMany({ organizationId }, { $set: { isDefault: false } });
+    await templates.updateMany({}, { $set: { isDefault: false } });
   }
-  const result = await templates.findOneAndUpdate(
-    { id, organizationId },
-    { $set: { ...data, updatedAt: new Date() } },
-    { returnDocument: "after" }
-  );
-  const doc = result && typeof result === "object" && "value" in result ? (result as { value?: any }).value : result;
-  return doc ?? null;
+  await templates.updateOne({ id }, { $set: { ...data, updatedAt: new Date() } });
+  return templates.findOne({ id });
 }
 
-export async function deleteReceiptTemplate(id: number, organizationId: number) {
+export async function deleteReceiptTemplate(id: number) {
   const templates = await getCollection<any>("receiptTemplates");
-  await templates.deleteOne({ id, organizationId });
+  await templates.deleteOne({ id });
 }
 
-export async function getReceiptTemplates(organizationId: number) {
+export async function getReceiptTemplates() {
   const templates = await getCollection<any>("receiptTemplates");
-  return templates.find({ organizationId }).sort({ name: 1 }).toArray();
+  return templates.find({}).sort({ name: 1 }).toArray();
 }
 
-export async function getDefaultReceiptTemplate(organizationId: number) {
+export async function getDefaultReceiptTemplate() {
   const templates = await getCollection<any>("receiptTemplates");
-  const defaultTemplate = await templates.findOne({ organizationId, isDefault: true });
+  // หา template ที่ isDefault = true ก่อน
+  const defaultTemplate = await templates.findOne({ isDefault: true });
   if (defaultTemplate) {
     return defaultTemplate;
   }
-  const firstTemplate = await templates.findOne(
-    { organizationId },
-    { sort: { createdAt: -1 } }
-  );
+  // ถ้าไม่มี default ให้ใช้ template แรกที่เจอ
+  const firstTemplate = await templates.findOne({}, { sort: { createdAt: -1 } });
   return firstTemplate;
 }
 
-export async function getReceiptTemplate(id: number, organizationId: number) {
+export async function getReceiptTemplate(id: number) {
   const templates = await getCollection<any>("receiptTemplates");
-  return templates.findOne({ id, organizationId });
+  return templates.findOne({ id });
 }
 
 // ============ DISCOUNT CODES ============

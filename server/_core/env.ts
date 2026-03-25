@@ -17,9 +17,6 @@ if (!process.env.MONGODB_URI) {
     console.log("[ENV] ✅ MONGODB_URI loaded from .env (fallback)");
   }
 }
-// Trim ค่า URI เพื่อกัน newline/space ในไฟล์ env ทำให้ต่อไม่ติด
-if (process.env.MONGODB_URI) process.env.MONGODB_URI = process.env.MONGODB_URI.trim();
-if (process.env.MONGODB_URI_STANDARD) process.env.MONGODB_URI_STANDARD = process.env.MONGODB_URI_STANDARD.trim();
 
 console.log(`[ENV] JWT_SECRET is ${process.env.JWT_SECRET ? `set (length: ${process.env.JWT_SECRET.length})` : "NOT SET"}`);
 

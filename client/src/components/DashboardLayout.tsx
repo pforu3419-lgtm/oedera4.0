@@ -79,10 +79,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [location, setLocation] = useLocation();
   const { loading, user, logout } = useAuth();
 
-  // Global access lock: ตรวจทุกคนที่ล็อกอิน (ไม่ใช่ superadmin) — ไม่มี store หรือ status ไม่ active = บล็อก
-  const needsSubscriptionCheck = !!user && user.role !== "superadmin";
+  // Global access lock: ถ้าร้านไม่ active จะเข้า "ทุกหน้า" ไม่ได้ (ตาม requirement ล่าสุด)
   const subscriptionQuery = trpc.subscription.my.useQuery(undefined, {
-    enabled: needsSubscriptionCheck,
+    enabled: !!user && user.role !== "superadmin" && !!user.storeId,
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -138,37 +137,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   // Super Admin ไม่ถูกล็อกด้วยสถานะร้าน
-  const shouldCheckSubscription = needsSubscriptionCheck;
-  if (shouldCheckSubscription) {
+  if (user.role !== "superadmin" && user.storeId) {
     if (subscriptionQuery.isLoading) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
           <div className="flex items-center gap-3 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
             กำลังตรวจสอบสถานะการใช้งาน...
-          </div>
-        </div>
-      );
-    }
-
-    // ถ้า API error หรือไม่มี data = block (กัน bypass)
-    if (subscriptionQuery.isError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background px-4">
-          <div className="w-full max-w-lg rounded-xl border bg-card p-6 shadow-sm space-y-4">
-            <div className="text-xl font-bold">ไม่สามารถตรวจสอบสถานะได้</div>
-            <div className="text-muted-foreground">
-              กรุณาลองโหลดใหม่ หรือติดต่อผู้ดูแลระบบ
-            </div>
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button variant="outline" onClick={() => setLocation("/package")}>
-                สมัครแพ็กเกจ
-              </Button>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                โหลดใหม่
-              </Button>
-              <Button onClick={() => logout()}>ออกจากระบบ</Button>
-            </div>
           </div>
         </div>
       );
@@ -181,21 +156,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       | "disabled"
       | undefined;
 
-    // บล็อกทุกกรณีที่ status ไม่ใช่ "active" — ยกเว้นไม่มีร้าน (disabled) ให้เข้าได้แค่หน้าแรก/สมัครร้าน/ตั้งค่า และอนุญาต /package
-    const allowedWhenNoStore = ["/", "/signup-store", "/login", "/register", "/settings"];
-    const isAllowedRoute = allowedWhenNoStore.includes(location);
-    const noStoreDisabled = status === "disabled" && !user.storeId && isAllowedRoute;
-    const isPackagePage = location === "/package";
-
-    if (status !== "active" && !noStoreDisabled && !isPackagePage) {
+    if (status && status !== "active") {
       const msg =
         status === "expired"
           ? "บัญชีของคุณหมดอายุ กรุณาต่ออายุเพื่อใช้งานต่อ"
           : status === "pending"
             ? "บัญชีของคุณอยู่ระหว่างรอการอนุมัติ (pending)"
-            : status === "disabled"
-              ? "บัญชีของคุณถูกปิดใช้งาน (disabled)"
-              : "ไม่สามารถเข้าใช้งานได้ กรุณาติดต่อผู้ดูแลระบบ";
+            : "บัญชีของคุณถูกปิดใช้งาน (disabled)";
 
       return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -203,13 +170,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="text-xl font-bold">ไม่สามารถเข้าใช้งานระบบได้</div>
             <div className="text-muted-foreground">{msg}</div>
             <div className="flex flex-wrap gap-2 pt-2">
-              <Button variant="outline" onClick={() => setLocation("/package")}>
-                สมัครแพ็กเกจ
-              </Button>
               <Button variant="outline" onClick={() => window.location.reload()}>
                 โหลดใหม่
               </Button>
-              <Button onClick={() => logout()}>ออกจากระบบ</Button>
+              <Button
+                onClick={() => {
+                  logout();
+                }}
+              >
+                ออกจากระบบ
+              </Button>
             </div>
           </div>
         </div>

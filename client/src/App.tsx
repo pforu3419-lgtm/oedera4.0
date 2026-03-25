@@ -19,7 +19,6 @@ import ThemeSettingsPage from "./pages/ThemeSettingsPage";
 import TaxSystem from "./pages/TaxSystem";
 import Toppings from "./pages/Toppings";
 import JoinStore from "./pages/JoinStore";
-import PackagePage from "./pages/PackagePage";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import MemberSignupPage from "./pages/MemberSignupPage";
@@ -64,7 +63,6 @@ function Router() {
       <Route path={"/tax"} component={TaxSystem} />
       <Route path={"/toppings"} component={Toppings} />
       <Route path={"/join-store"} component={JoinStore} />
-      <Route path={"/package"} component={PackagePage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
